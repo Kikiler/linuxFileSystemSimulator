@@ -160,7 +160,7 @@ int mkdir(char* pathname) {
 				current->child->sibling = NULL;
 				current->child->parent = current;
 				current->child->fileType = 'D';
-				printf("a new directory : %s has been created at %s starting from root\n", current->child->name, str1);
+				printf("a new child directory : %s has been created at %s starting from root\n", current->child->name, str1);
 				free(str1);
 				free(str2);
 				free(sep);
@@ -181,7 +181,7 @@ int mkdir(char* pathname) {
 		current->sibling->child = NULL;
 		current->sibling->parent = current->parent;
 		current->sibling->fileType = 'D';
-		printf("a new directory : %s has been created at %s starting from root\n", current->sibling->name, str1);
+		printf("a new sibling directory : %s has been created at %s starting from root\n", current->sibling->name, str1);
 		free(str1);
 		free(str2);
 		free(sep);
@@ -250,7 +250,7 @@ int rmdir(char* pathname){
 				return -1;
 			}
 			if(strcmp(current->name, currentDir) != 1){
-				while(current != NULL && strcmp(current->name, currentDir) != 1)
+				while(current != NULL && strcmp(current->name, currentDir) != 0 )
 					current->sibling = current;
 				if(current == NULL){
 					fprintf(stderr, "no directory named %s\n", currentDir);
