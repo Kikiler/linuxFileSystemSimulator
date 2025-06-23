@@ -137,7 +137,9 @@ int mkdir(char* pathname) {
 			if(strcmp(current->name, currentDir) != 0){
 				//	printf("found name : %s and current directory : %s \n", current->name, currentDir);
 				while(current != NULL && strcmp(current->name, currentDir) != 0){
+					printf("current sibling : %s \n", current->name);
 					current = current->sibling;
+
 				}
 				if(current == NULL){
 					fprintf(stderr, "no directory named 2nd %s\n", currentDir);
@@ -173,6 +175,7 @@ int mkdir(char* pathname) {
 				return -1;
 			}
 		}
+		current = current->child;
 		while(current->sibling != NULL){
 			current = current->sibling;
 		}
@@ -205,7 +208,7 @@ int rmdir(char* pathname){
 				return -1;
 			}
 			if(strcmp(current->name, currentDir) != 1){
-				while(current != NULL && strcmp(current->name, currentDir) != 1)
+				while(current != NULL && strcmp(current->name, currentDir) !=0 )
 					current->sibling = current;
 			}
 
