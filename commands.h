@@ -1,3 +1,5 @@
+#pragma once
+#include "utils/linkedList.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,22 +15,22 @@ typedef struct NODE {
 node* ROOT;
 node* CWD; 
 
-typedef int (*command)(char* pathname);
+typedef int (*command)(const char* pathname);
 
-int mkdir(char* pathname); 
+int mkdir(const char* pathname);
 
-int rmdir(char* pathname);
+int rmdir(const char* pathname);
 
-int cd(char* pathname);
+int cd(const char* pathname);
 
-int ls(char* pathname);
+int ls(const char* pathname);
 
 int pwd(void);
 
-int creat(char* pathname);
+int creat(const char* pathname);
 
-int rm(char* pathname);
+int rm(const char* pathname);
 
-int save(char* filename);
+int save(const char* filename);
 
-int reload(char* pathname);
+int reload(const char* pathname);

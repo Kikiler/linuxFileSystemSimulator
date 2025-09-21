@@ -1,6 +1,6 @@
 #include "commands.h"
 
-int findCMD(char* cmdName){
+int findCMD(const char* cmdName){
 	if(strcmp(cmdName, "mkdir") == 0){
 		return 0;
 	}
@@ -48,7 +48,7 @@ int main(void) {
 	puts("mkdir, rmdir, cd, ls, rm, save and reload all working with a directory name and pwd without ");
 	while(1){
 		char buffer[128];
-		puts("Type a command among the aforementionned");
+		puts("Type a command among the aforementioned");
 		fgets(buffer, 128, stdin);
 		buffer[strcspn(buffer, "\n")]='\0';
 		char commandName[20];

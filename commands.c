@@ -1,296 +1,121 @@
 #include "commands.h"
 
-char* basename(char* pathname){
-	char* name = strdup(pathname);
-	char* result = NULL;
-	char* str = name;
-	char* sep = strdup("/");
-	if(pathname[0] =='/'){
-		name++;
-		//printf("name after the / %s \n", name);
-	}
-	char* token = strsep(&name, sep);
-	while(token != NULL && token[0] != '\0'){
-		//printf("a token : %s\n", token);
-		result = strdup(token);
-		token = strsep(&name, sep);
-	}
-	if(result == NULL){
-		fprintf(stderr, "error in parsing \n");
-		exit(-1);
-	}
-	free(str);
-	free(sep);
-	//printf("the found base is %s \n", result);
-	return result;
+linkedElement* dirname(const char* pathname){
+	return fromStrToList(pathname);
 }
 
-char* dirname(char* pathname){
-	char* name = strdup(pathname);
-	char* result = strdup("");
-	char* str = name;
-	char* sep = strdup("/");
-	if(pathname[0]=='/'){
-		result = strdup("/");
-		name++;
-		//printf("name after the / %s \n", name);
-	}
-	char* token = strsep(&name, sep);
-	while(token != NULL && strcmp(token, basename(pathname)) != 0){
-		if(token[0] != '\0'){
-			//printf("actually found a token : %s\n", token);
-			strlcat(result, token, strlen(token)+strlen(result)+1);
-			strlcat(result, sep, strlen(result) + 2);
-			//printf("current path: %s\n", result);
+int mkdir(const char* pathname) {
+	if (pathname[0] == '/') {
+		linkedElement* path = dirname(pathname);
+		printf(" path to create : %s\n", pathname);
+		if (ROOT->child == NULL) {
+			if (path->next != NULL) {
+				fprintf(stderr, "no directory name : %s\n", path->next->content);
+				destroy(path);
+				return -1;
+			}
+			ROOT->child = malloc(sizeof(node));
+			ROOT->child->name = path->content;
+			ROOT->child->child = NULL;
+			ROOT->child->parent = ROOT;
+			ROOT->child->sibling = NULL;
+			ROOT->child->fileType = 'D';
+			printf("a new directory whose name is %s has been created \n", path->content);
+			destroy(path);
+			return 0; // success
 		}
-		token = strsep(&name, sep);
+
+		node* currentDir = ROOT->child;
+		puts("beginning of the loop");
+		for (linkedElement* currentLinkedListEl = path; currentLinkedListEl != NULL; currentLinkedListEl = currentLinkedListEl->next) {
+			if (strcmp(last(currentLinkedListEl)->content, currentLinkedListEl->content) == 0 && last(currentLinkedListEl)->depth == currentLinkedListEl->depth) { // the path exists
+				if (strcmp(currentLinkedListEl->content, currentDir->name) != 0) {
+					puts("reached the end");
+					while (currentDir->sibling != NULL)
+						currentDir = currentDir->sibling;
+					currentDir->sibling = malloc(sizeof(node));
+					currentDir->sibling->name = currentLinkedListEl->content;
+					currentDir->sibling->sibling = NULL;
+					currentDir->sibling->parent = currentDir->parent;
+					currentDir->sibling->child = NULL;
+					currentDir->sibling->fileType = 'D';
+					printf("a new directory whose name is %s has been created \n", currentLinkedListEl->content);
+					destroy(path);
+					return 0; // success
+				}
+				currentLinkedListEl = currentLinkedListEl->next;
+				printf(" %s already exists \n", currentLinkedListEl->content);
+			}
+			else if (strcmp(last(currentLinkedListEl)->content, currentLinkedListEl->content) == 0 && last(currentLinkedListEl)->depth != currentLinkedListEl->depth) {
+				if (strcmp(currentLinkedListEl->content, currentDir->name) != 0) {
+					node* currentSibling = currentDir->sibling;
+					while (currentSibling != NULL && strcmp(currentSibling->name, currentLinkedListEl->content) != 0)
+						currentSibling = currentSibling->sibling;
+					if (currentSibling == NULL) {
+						fprintf(stderr, "no directory name : %s\n", currentLinkedListEl->content);
+						destroy(path);
+						return -1;
+					}
+					printf("current depth : %d \n", currentLinkedListEl->depth);
+					currentDir = currentSibling;
+					printf("a sibling has been found: %s \n", currentLinkedListEl->content);
+				}
+			}
+			else if (strcmp(currentLinkedListEl->content, currentDir->name) != 0) {
+				node* currentSibling = currentDir->sibling;
+				while (currentSibling != NULL && strcmp(currentSibling->name, currentLinkedListEl->content) != 0)
+					currentSibling = currentSibling->sibling;
+				if (currentSibling == NULL) {
+					fprintf(stderr, "no directory name : %s\n", currentLinkedListEl->content);
+					destroy(path);
+					return -1;
+				}
+				printf("current depth : %d \n", currentLinkedListEl->depth);
+				currentDir = currentSibling;
+				printf("a sibling has been found: %s \n", currentLinkedListEl->content);
+			}
+			else {
+				if (currentDir->child == NULL && currentLinkedListEl->next->depth != last(currentLinkedListEl)->depth) {
+					fprintf(stderr, "no directory name : %s\n", currentLinkedListEl->content);
+					destroy(path);
+					return -1;
+				}
+				else if (currentDir->child == NULL && currentLinkedListEl->next->depth == last(currentLinkedListEl)->depth) {
+					currentDir->child = malloc(sizeof(node));
+					currentDir->child->name = currentLinkedListEl->next->content;
+					currentDir->child->sibling = NULL;
+					currentDir->child->child = NULL;
+					currentDir->child->parent = currentDir;
+					currentDir->fileType = 'D';
+					printf("a new child has been created : %s \n", currentLinkedListEl->next->content);
+					destroy(path);
+					return 0;
+				}
+				else {
+						currentDir = currentDir->child;
+						puts("the file is down below in the child");
+						printf("current depth : %d \n", currentLinkedListEl->depth);
+					}
+
+			}
+		}
+		puts("end of loop");
+		destroy(path);
+		return -1;
 	}
-	free(str);
-	free(sep);
-	return result;
+
+	return 0;
 }
-
-int mkdir(char* pathname) {
-	//	puts("Mkdir actually launched");
-	if(pathname != NULL && pathname[0] != '/'){
-		char* dir = strdup(dirname(pathname));
-		char* str1 = strdup(dir);
-		char* name = strdup(basename(pathname));
-		char* str2= name;
-		printf("found a base %s and dir %s \n", name, dir);
-		node* current = CWD;
-		for(char* currentDir = strsep(&dir, "/"); currentDir != NULL; currentDir = strsep(&dir, "/")){
-			current = current->child;
-			if(current == NULL){
-				fprintf(stderr, "no directory named %s\n", currentDir);
-				free(str1);
-				free(str2);
-				return -1;
-			}
-			if(strcmp(current->name, currentDir) != 0){
-				while(current != NULL && strcmp(current->name, currentDir) != 0)
-					current->sibling = current;
-				if(strcmp(current->name, currentDir) != 0){
-					fprintf(stderr, "no directory named %s\n", currentDir);
-					free(str1);
-					free(str2);
-					return -1;
-				}
-			}
-			if(current->fileType != 'D'){
-				fprintf(stderr, " %s not a directory \n", currentDir);
-				free(str1);
-				free(str2);
-				return -1;
-			}
-		}
-
-		while(current->sibling != NULL){
-			current = current->sibling;
-		}
-		current->sibling = malloc(sizeof(node));
-		current->sibling->name = name;
-		current->sibling->sibling = NULL;
-		current->sibling->child = NULL;
-		current->sibling->parent = current->parent;
-		current->sibling->fileType = 'D';
-		printf("created a new directory : %s at %s starting from the current working directory \n", current->sibling->name, str1);
-		free(str1);
-		free(str2);
-		return 0; // success
-	}
-	else if(pathname != NULL){
-		char* dir = dirname(pathname);
-		char* name = basename(pathname);
-		char* str1 = dir;
-		char* str2 = name;
-		char* sep = strdup("/");
-		node* current = malloc(sizeof(node));	
-		char* dirCopy = strdup(dir);
-		printf("found a base :%s and dir :%s \n", name, dir);
-		dir++;
-		//printf("incremented dir pointer :%s \n", dir);
-		current = ROOT;
-		if(current->child == NULL){
-			current->child = malloc(sizeof(node));
-			current->child->parent = current;
-			current->child->name = strdup(name);
-			current->child->sibling = NULL; 
-			current->child->child = NULL;
-			current->child->fileType = 'D';
-			printf("the first directory : %s has been created starting from root \n", current->child->name);
-			free(str1);
-			free(str2);
-			free(sep);
-			return 0;
-		}
-		for(char* currentDir = strsep(&dir, sep); currentDir != NULL && currentDir[0] != '\0'; currentDir = strsep(&dir, sep)){
-			current = current->child;
-			puts("in loop (root)");
-			if(current == NULL){
-				fprintf(stderr, "no directory named 1st %s\n", currentDir);
-				free(str1);
-				free(str2);
-				free(sep);
-				return -1;
-			}
-			if(strcmp(current->name, currentDir) != 0){
-				//	printf("found name : %s and current directory : %s \n", current->name, currentDir);
-				while(current != NULL && strcmp(current->name, currentDir) != 0){
-					printf("current sibling : %s \n", current->name);
-					current = current->sibling;
-
-				}
-				if(current == NULL){
-					fprintf(stderr, "no directory named 2nd %s\n", currentDir);
-					free(str1);
-					free(str2);
-					free(sep);
-					return -1;
-				}
-				if(current->fileType != 'D'){
-					fprintf(stderr, " %s not a directory \n", currentDir);
-					free(str1);
-					free(str2);
-					return -1;
-				}
-			}
-			if(current->child == NULL){
-				current->child = malloc(sizeof(node));
-				current->child->name = strdup(name);
-				current->child->child = NULL;
-				current->child->sibling = NULL;
-				current->child->parent = current;
-				current->child->fileType = 'D';
-				printf("a new child directory : %s has been created at %s starting from root\n", current->child->name, str1);
-				free(str1);
-				free(str2);
-				free(sep);
-				return 0;//success
-			}
-			if(current->fileType != 'D'){
-				fprintf(stderr, " %s not a directory \n", currentDir);
-				free(str1);
-				free(str2);
-				return -1;
-			}
-		}
-		current = current->child;
-		while(current->sibling != NULL){
-			current = current->sibling;
-		}
-		current->sibling = malloc(sizeof(node));
-		current->sibling-> name = strdup(name);
-		current->sibling->child = NULL;
-		current->sibling->parent = current->parent;
-		current->sibling->fileType = 'D';
-		printf("a new sibling directory : %s has been created at %s starting from root\n", current->sibling->name, str1);
-		free(str1);
-		free(str2);
-		free(sep);
-		return 0; // success
-	}
-	fprintf(stderr, "should never get there \n");
-	return -1;
-}
-int rmdir(char* pathname){
-	if(pathname != NULL && pathname[0] != '/'){
-		char* dir = strdup(dirname(pathname));
-		char* name = strdup(basename(pathname));
-		node* current = ROOT;
-		node* previous = ROOT;
-		for(char* currentDir = strsep(&pathname, "/"); currentDir != NULL; currentDir = strsep(&pathname, "/")){
-			current = current->child;
-			if(current == NULL){
-				fprintf(stderr, "no directory name %s\n", currentDir);
-				free(name);
-				free(dir);
-				return -1;
-			}
-			if(strcmp(current->name, currentDir) != 1){
-				while(current != NULL && strcmp(current->name, currentDir) !=0 )
-					current->sibling = current;
-			}
-
-			if(strcmp(current->name, currentDir) != 1){
-				fprintf(stderr, "no directory named %s\n", currentDir);
-				free(name);
-				free(dir);
-				return -1;
-			}
-			if(current->fileType != 'D'){
-				fprintf(stderr, " %s not a directory \n", currentDir);
-				free(name);
-				free(dir);
-				return -1;
-			}
-		}
-
-		while(current->sibling != NULL){
-			current = current->sibling;
-		}
-		current->sibling = malloc(sizeof(node));
-		current->sibling->name = name;
-		current->sibling->sibling = NULL;
-		current->sibling->child = NULL;
-		current->sibling->parent = current->parent;
-		current->sibling->fileType = 'D';
-		free(name);
-		free(dir);
-		return 0; // success
-	}
-	else if(pathname != NULL){
-		char* dir = strdup(dirname(pathname));
-		char* name = strdup(basename(pathname));
-		node* current = malloc(sizeof(node));	
-		current = CWD;
-		for(char* currentDir = strsep(&dir, "/"); currentDir != NULL; currentDir = strsep(&dir, "/")){
-			current = current->child;
-			if(current == NULL){
-				fprintf(stderr, "no directory name %s\n", currentDir);
-				free(name);
-				free(dir);
-				return -1;
-			}
-			if(strcmp(current->name, currentDir) != 1){
-				while(current != NULL && strcmp(current->name, currentDir) != 0 )
-					current->sibling = current;
-				if(current == NULL){
-					fprintf(stderr, "no directory named %s\n", currentDir);
-					free(name);
-					free(dir);
-					return -1;
-				}
-				if(current->fileType != 'D'){
-					fprintf(stderr, " %s not a file \n", currentDir);
-					free(name);
-					free(dir);
-					return -1;
-				}
-			}
-		}
-		while(current->sibling != NULL){
-			current = current->sibling;
-		}
-		current->sibling = malloc(sizeof(node));
-		current->sibling->name = name;
-		current->sibling->sibling = NULL;
-		current->sibling->child = NULL;
-		current->sibling->parent = current->parent;
-		current->sibling->fileType = 'D';
-		free(name);
-		free(dir);
-		return 0; // success
-	}
-	return -1;
-}
-
-
-int cd(char* pathname){
+int rmdir(const char* pathname){
 	return 0;
 }
 
-int ls(char* pathname){
+
+int cd(const char* pathname){
+	return 0;
+}
+
+int ls(const char* pathname){
 	return 0;
 }
 
@@ -298,18 +123,18 @@ int pwd(void){
 	return 0;
 }
 
-int creat(char* pathname){
+int creat(const char* pathname){
 	return 0;
 }
 
-int rm(char* pathname){
+int rm(const char* pathname){
 	return 4;
 }
 
-int save(char* filename){
+int save(const char* filename){
 	return 1 ;
 }
 
-int reload(char* pathname){
+int reload(const char* pathname){
 	return 1;
 }
