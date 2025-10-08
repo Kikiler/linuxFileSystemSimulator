@@ -17,18 +17,31 @@ void test_mkdir(void) {
 
     // siblings working correctly
     assert(!mkdir("/lol/lolol/"));
-    assert(!mkdir("/lol/omegatroll/"));
+    assert(1 == mkdir("/lol/omegatroll/"));
     assert(!mkdir("/lol/omegatroll/lolol/"));
-    assert(!mkdir("/ggmec/"));
+    assert(1 == mkdir("/ggmec/"));
     assert(!mkdir("/ggmec/lol/"));
 
     // unknown directory detection
-    assert(0 != mkdir("/false/trolleur/"));
-    assert(0 != mkdir("/ggmec/trolleur/lol/"));
-    assert(0 != mkdir("/lol/omegatroll/lolol/pasbon/inbon/"));
-    puts("Test mkdir done");
+    puts("unknown directory test");
+    assert(-1 == mkdir("/false/trolleur/"));
+    assert(-1 == mkdir("/ggmec/trolleur/lol/"));
+    assert(-1== mkdir("/lol/omegatroll/lolol/pasbon/inbon/"));
 
-    //TO DO : tests for the case where one of the directory has the name as the last one and when all the directories have the same names
+    puts("directories with same names");
+    //tests for the case where one of the directory has the name as the last one and when all the directories have the same names
+    assert(1 == mkdir("/false/"));
+    assert(!mkdir("/false/false/"));
+    assert(!mkdir("/false/false/false/"));
+
+    puts("duplicate directory tests");
+    //duplicate directories
+    assert(2==mkdir("/false/"));
+    assert(2==mkdir("/false/false/"));
+    assert(2==mkdir("/false/false/false/"));
+
+
+    puts("Test mkdir done");
 }
 
 int main(void) {

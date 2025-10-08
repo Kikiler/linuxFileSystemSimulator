@@ -55,6 +55,7 @@ linkedElement* last(const linkedElement* list){
 void destroy(linkedElement* list){
 	if(list == NULL){
 		fprintf(stderr, "Can't destroy null list");
+		exit(-1);
 	}
 	else if(list->next == NULL){
 		free(list);
@@ -75,6 +76,7 @@ void destroy(linkedElement* list){
 linkedElement* fromStrToList(const char* pathname){
 	if(pathname == NULL){
 		fprintf(stderr, "given string is null \n");
+		exit(-1);
 	}
 	char* path = strdup(pathname);
 	if(path[0] == '/')
@@ -89,6 +91,7 @@ return result;
 void printList(linkedElement* list){
 	if(list == NULL){
 		fprintf(stderr, "list is null");
+		exit(-1);
 	}
 	printf("[ %s", list->content);
 	for(const linkedElement* current = list->next; current != NULL; current = current->next){
