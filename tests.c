@@ -44,6 +44,57 @@ void test_mkdir(void) {
     puts("Test mkdir done");
 }
 
+void test_rmdir(void) {
+    puts("Test rmdir started");
+    ROOT = malloc(sizeof(node));
+    ROOT->child = NULL;
+    ROOT->sibling = NULL;
+    ROOT->fileType = 'D';
+    ROOT->name = "/";
+    ROOT->parent = NULL;
+    CWD = ROOT;
+
+    //create the files
+    mkdir("/Eldest00/");
+    mkdir("/Brother01/");
+    mkdir("/Sister02/");
+
+    mkdir("/Eldest00/Eldest10/");
+    mkdir("/Eldest00/Brother11/");
+    mkdir("/Eldest00/Sister12/");
+
+    mkdir("/Eldest00/Eldest10/Eldest20/");
+    mkdir("/Eldest00/Eldest10/Brother21/");
+    mkdir("/Eldest00/Eldest10/Sister22/");
+
+    //non empty directory check
+    assert(-1 == rmdir("/Eldest00/"));
+    assert(-1 == rmdir("/Eldest00/Eldest10/"));
+
+    //non existent directory
+    assert(-1 == rmdir("/Eldest00/Eldest10/Eldest20/lol"));
+    assert(-1 == rmdir("/Eldest00/Eldest10/lol/"));
+
+    //suppress all of them
+    assert(!rmdir("/Eldest00/Eldest10/Eldest20/"));
+    assert(1==rmdir("/Eldest00/Eldest10/Sister22/"));
+    assert(!rmdir("/Eldest00/Eldest10/Brother21/"));
+
+    assert(!rmdir("/Eldest00/Eldest10/"));
+    assert(!rmdir("/Eldest00/Brother11/"));
+    assert(!rmdir("/Eldest00/Sister12/"));
+
+    assert(!rmdir("/Eldest00/"));
+    assert(!rmdir("/Brother01/"));
+    assert(!rmdir("/Sister02/"));
+
+    //check if every file has been suppressed
+    assert(ROOT->child == NULL);
+
+    puts("Test rmdir done");
+}
+
 int main(void) {
-test_mkdir();
+    test_mkdir();
+    test_rmdir();
 }

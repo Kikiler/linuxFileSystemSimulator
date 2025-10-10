@@ -7,7 +7,7 @@ linkedElement* dirname(const char* pathname){
 int mkdir(const char* pathname) {
 	if (pathname[0] == '/') {
 		linkedElement* path = dirname(pathname);
-		printf(" path to create : %s\n", pathname);
+		//printf(" path to create : %s\n", pathname);
 		if (ROOT->child == NULL) {
 			if (path->next != NULL) {
 				fprintf(stderr, "no directory name : %s\n", path->next->content);
@@ -45,7 +45,7 @@ int mkdir(const char* pathname) {
 					lastDir->sibling->parent = lastDir->parent;
 					lastDir->sibling->child = NULL;
 					lastDir->fileType = 'D';
-					puts("sibling has been created");
+					//puts("sibling has been created");
 					return 1;
 				}
 				else if (currentSibling == NULL) { // case where the file doesnt exist
@@ -73,14 +73,12 @@ int mkdir(const char* pathname) {
 						fprintf(stderr, " %s already exists \n", pathname);
 						return 2;
 					}
-					printf("current depth : %d \n", lastLinkedListEl->depth);
-
+					//printf("current depth : %d \n", lastLinkedListEl->depth);
 			}
-			lastLinkedListEl = currentLinkedListEl;
 		}
-		puts("end of loop");
-		if (lastLinkedListEl->depth != last(path)->depth) {
-			fprintf(stderr, "no directory name : %s\n", lastLinkedListEl->content);
+		//puts("end of loop");
+		if (currentLinkedListEl->depth != last(path)->depth) {
+			fprintf(stderr, "no directory name : %s\n", currentLinkedListEl->content);
 			destroy(path);
 			return -1;
 		}
@@ -91,13 +89,74 @@ int mkdir(const char* pathname) {
 		lastDir->child->parent = lastDir;
 		lastDir->child->fileType = 'D';
 		destroy(path);
-		puts("child has been created");
+		//puts("child has been created");
 		return 0;
 	}
 
 	return 0;
 }
 int rmdir(const char* pathname){
+	if (pathname[0] == '/') {
+		linkedElement* path = dirname(pathname);
+		node* currentDir = ROOT->child;
+		node* lastDir = currentDir;
+		linkedElement* currentLinkedListEl = path;
+		linkedElement* lastLinkedListEl = currentLinkedListEl;
+		while (currentDir != NULL) {
+			if (strcmp(currentLinkedListEl->content, currentDir->name) != 0) {
+				lastDir = currentDir;
+				node* currentSibling = currentDir->sibling;
+				while (currentSibling != NULL && strcmp(currentSibling->name, currentLinkedListEl->content) != 0) {
+					lastDir = currentSibling;
+					currentSibling = currentSibling->sibling;
+				}
+				if (currentSibling == NULL) { // case where the file doesnt exist
+					fprintf(stderr, "no sibling directory name : %s, last known : %s \n", currentLinkedListEl->content, lastDir->name);
+					destroy(path);
+					return -1;
+				}
+				else if (last(path)->depth == currentLinkedListEl->depth && strcmp(currentSibling->name, currentLinkedListEl->content) == 0) { // case where the file needs to be destroyed
+					node* next = currentSibling->sibling;
+					if (currentSibling->child != NULL) {
+						fprintf(stderr, "%s is not empty \n", currentSibling->name);
+						destroy(path);
+						return -1;
+					}
+					free(currentSibling);
+					lastDir->sibling = next;
+					puts("sibling has been deleted");
+					return 1;
+				}
+				lastDir = currentSibling;
+				currentDir = currentSibling->child;
+				//printf("a sibling : %s has been found in depth : %d  \n", currentLinkedListEl->content, currentLinkedListEl->depth);
+				lastLinkedListEl = currentLinkedListEl;
+				currentLinkedListEl = currentLinkedListEl->next;
+			}
+			else {
+				lastDir = currentDir;
+				currentDir = currentDir->child;
+				lastLinkedListEl = currentLinkedListEl;
+				currentLinkedListEl = currentLinkedListEl->next;
+				//puts("the file is down below in the child");
+				if (currentLinkedListEl == NULL) {
+					if (currentDir != NULL) {
+						fprintf(stderr, "%s is not empty \n", lastDir->name);
+						destroy(path);
+						return -1;
+					}
+					node* next = lastDir->sibling;
+					lastDir->parent->child = next;
+					free(lastDir);
+					puts("child has been deleted");
+					return 0;
+				}
+			}
+		}
+			fprintf(stderr, "no sibling directory name : %s, last known : %s \n", currentLinkedListEl->content, lastDir->name);
+			destroy(path);
+			return -1;
+	}
 	return 0;
 }
 
