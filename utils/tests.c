@@ -20,7 +20,7 @@ void test_stack(void) {
 	printStack(myStack);
 	assert(myStack->size == 40);
 	assert(myStack->indexOfNext == 12);
-	puts("test ended successfully");
+	puts("test ended successfully :)");
 
 
 }
