@@ -4,7 +4,7 @@
 
 typedef struct LISTELEMENT {
 	struct LISTELEMENT* next;
-	char* content;
+	const char* content;
 	int depth;
 } linkedElement;
 

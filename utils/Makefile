@@ -1,4 +1,4 @@
-obj = tests.o linkedList.o
+obj = tests.o linkedList.o stack.o
 tests.out: $(obj) 
 	cc $^ -o $@ -g 
 %.o: %.c

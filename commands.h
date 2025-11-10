@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 typedef struct NODE {
-	char* name;
+	const char* name;
 	char fileType;
 	struct NODE* child;
 	struct NODE* parent;
@@ -13,7 +13,13 @@ typedef struct NODE {
 } node;
 
 node* ROOT;
-node* CWD; 
+node* CWD;
+
+void initRoot(void);
+
+void giveBirth(node* parent, const char* name);
+
+void addSibling(node* sibling, const char* name);
 
 typedef int (*command)(const char* pathname);
 
@@ -34,3 +40,5 @@ int rm(const char* pathname);
 int save(const char* filename);
 
 int reload(const char* pathname);
+
+

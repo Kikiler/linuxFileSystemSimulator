@@ -1,10 +1,30 @@
-#include "linkedList.h"
 #include <assert.h>
+#include "stack.h"
+
+
+void test_stack(void) {
+	puts("stack test started");
+	stack* myStack = initStack(10);
+	pileUp(myStack, "décembre");
+	pileUp(myStack, "novembre");
+	pileUp(myStack, "octobre");
+	pileUp(myStack, "septembre");
+	pileUp(myStack, "aout");
+	pileUp(myStack, "juillet");
+	pileUp(myStack, "juin");
+	pileUp(myStack, "mai");
+	pileUp(myStack, "avril");
+	pileUp(myStack, "mars");
+	pileUp(myStack, "février");
+	pileUp(myStack, "janvier");
+	printStack(myStack);
+	assert(myStack->size == 40);
+	assert(myStack->indexOfNext == 12);
+	puts("test ended successfully");
+
+
+}
 
 int main(void){
-	//STRING LITERALS ARE IMMUTABLE YOU PIG
-linkedList* list = fromStrToList("/Applications/Android Studio.app/Contents/license/commons-io-2.4.jar-NOTICE/");
-printList(list);
-destroy(list);
-//assert(list == NULL);
+	test_stack();
 }

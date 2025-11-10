@@ -1,6 +1,51 @@
 #include "commands.h"
 
-linkedElement* dirname(const char* pathname){
+
+void initRoot(void) {
+	ROOT = (node*)malloc(sizeof(node));
+	ROOT->child = NULL;
+	ROOT->parent = NULL;
+	ROOT->sibling = NULL;
+	ROOT->name = "/";
+	CWD = ROOT;
+}
+
+void addSibling(node* sibling, const char* name) {
+	if (sibling == NULL) {
+		fprintf(stderr, "sibling is NULL\n");
+		exit(-1);
+	}
+	if (sibling->sibling != NULL) {
+		fprintf(stderr, "sibling is not NULL -> so I can't add you right now as sibling\n");
+		exit(-1);
+	}
+	sibling->sibling = (node*)malloc(sizeof(node));
+	sibling->sibling->name = name;
+	sibling->sibling->parent = sibling->parent;
+	sibling->sibling->sibling = NULL;
+	sibling->sibling->child = NULL;
+	sibling->sibling->fileType = 'D'; // temporary solution
+}
+
+void giveBirth(node* parent, const char* name) {
+	if (parent == NULL) {
+		fprintf(stderr, "giveBirth: parent is NULL\n");
+		exit(-1);
+	}
+	if (parent->child != NULL) {
+		fprintf(stderr, "giveBirth: child is not NULL\n");
+		exit(-1);
+	}
+
+	parent->child = (node*)malloc(sizeof(node));
+	parent->child->name = name;
+	parent->child->parent = parent;
+	parent->child->sibling = NULL;
+	parent->child->child = NULL;
+	parent->child->fileType = 'D'; // temporary solution
+}
+
+static linkedElement* dirname(const char* pathname){
 	return fromStrToList(pathname);
 }
 
@@ -14,12 +59,7 @@ int mkdir(const char* pathname) {
 				destroy(path);
 				return -1;
 			}
-			ROOT->child = malloc(sizeof(node));
-			ROOT->child->name = path->content;
-			ROOT->child->child = NULL;
-			ROOT->child->parent = ROOT;
-			ROOT->child->sibling = NULL;
-			ROOT->child->fileType = 'D';
+			giveBirth(ROOT, path->content);
 			//printf("a new directory whose name is %s has been created \n", path->content);
 			destroy(path);
 			return 0; // success
@@ -28,7 +68,6 @@ int mkdir(const char* pathname) {
 		node* currentDir = ROOT->child;
 		node* lastDir = currentDir;
 		linkedElement* currentLinkedListEl = path;
-		linkedElement* lastLinkedListEl = currentLinkedListEl;
 		//puts("beginning of the loop");
 		while(currentDir != NULL) {
 			if (strcmp(currentLinkedListEl->content, currentDir->name) != 0) {
@@ -39,16 +78,11 @@ int mkdir(const char* pathname) {
 					currentSibling = currentSibling->sibling;
 				}
 				if (last(path)->depth == currentLinkedListEl->depth && currentSibling == NULL) { // case where the file needs to be created
-					lastDir->sibling = malloc(sizeof(node));
-					lastDir->sibling->name = currentLinkedListEl->content;
-					lastDir->sibling->sibling = NULL;
-					lastDir->sibling->parent = lastDir->parent;
-					lastDir->sibling->child = NULL;
-					lastDir->fileType = 'D';
+					addSibling(lastDir, currentLinkedListEl->content);
 					//puts("sibling has been created");
 					return 1;
 				}
-				else if (currentSibling == NULL) { // case where the file doesnt exist
+				if (currentSibling == NULL) { // case where the file doesnt exist
 					fprintf(stderr, "no sibling directory name : %s, last known : %s \n", currentLinkedListEl->content, lastDir->name);
 					destroy(path);
 					return -1;
@@ -56,7 +90,6 @@ int mkdir(const char* pathname) {
 				lastDir = currentSibling;
 				currentDir = currentSibling->child;
 				//printf("a sibling : %s has been found in depth : %d  \n", currentLinkedListEl->content, currentLinkedListEl->depth);
-				lastLinkedListEl = currentLinkedListEl;
 				currentLinkedListEl = currentLinkedListEl->next;
 				if (currentLinkedListEl == NULL) { // case when the file already exist
 					fprintf(stderr, " %s already exists \n", pathname);
@@ -66,7 +99,6 @@ int mkdir(const char* pathname) {
 			else {
 					lastDir = currentDir;
 					currentDir = currentDir->child;
-					lastLinkedListEl = currentLinkedListEl;
 					currentLinkedListEl = currentLinkedListEl->next;
 					//puts("the file is down below in the child");
 					if (currentLinkedListEl == NULL) {
@@ -82,12 +114,7 @@ int mkdir(const char* pathname) {
 			destroy(path);
 			return -1;
 		}
-		lastDir->child = malloc(sizeof(node));
-		lastDir->child->name = currentLinkedListEl->content;
-		lastDir->child->sibling = NULL;
-		lastDir->child->child = NULL;
-		lastDir->child->parent = lastDir;
-		lastDir->child->fileType = 'D';
+		giveBirth(lastDir, currentLinkedListEl->content);
 		destroy(path);
 		//puts("child has been created");
 		return 0;
@@ -95,13 +122,13 @@ int mkdir(const char* pathname) {
 
 	return 0;
 }
+
 int rmdir(const char* pathname){
 	if (pathname[0] == '/') {
 		linkedElement* path = dirname(pathname);
 		node* currentDir = ROOT->child;
 		node* lastDir = currentDir;
 		linkedElement* currentLinkedListEl = path;
-		linkedElement* lastLinkedListEl = currentLinkedListEl;
 		while (currentDir != NULL) {
 			if (strcmp(currentLinkedListEl->content, currentDir->name) != 0) {
 				lastDir = currentDir;
@@ -115,7 +142,7 @@ int rmdir(const char* pathname){
 					destroy(path);
 					return -1;
 				}
-				else if (last(path)->depth == currentLinkedListEl->depth && strcmp(currentSibling->name, currentLinkedListEl->content) == 0) { // case where the file needs to be destroyed
+				if (last(path)->depth == currentLinkedListEl->depth && strcmp(currentSibling->name, currentLinkedListEl->content) == 0) { // case where the file needs to be destroyed
 					node* next = currentSibling->sibling;
 					if (currentSibling->child != NULL) {
 						fprintf(stderr, "%s is not empty \n", currentSibling->name);
@@ -130,13 +157,11 @@ int rmdir(const char* pathname){
 				lastDir = currentSibling;
 				currentDir = currentSibling->child;
 				//printf("a sibling : %s has been found in depth : %d  \n", currentLinkedListEl->content, currentLinkedListEl->depth);
-				lastLinkedListEl = currentLinkedListEl;
 				currentLinkedListEl = currentLinkedListEl->next;
 			}
 			else {
 				lastDir = currentDir;
 				currentDir = currentDir->child;
-				lastLinkedListEl = currentLinkedListEl;
 				currentLinkedListEl = currentLinkedListEl->next;
 				//puts("the file is down below in the child");
 				if (currentLinkedListEl == NULL) {
@@ -161,7 +186,62 @@ int rmdir(const char* pathname){
 }
 
 
-int cd(const char* pathname){
+int cd(const char* pathname) {
+	if (pathname[0] == '/') {
+		linkedElement* path = dirname(pathname);
+		node* currentDir = ROOT->child;
+		node* lastDir = currentDir;
+		linkedElement* currentLinkedListEl = path;
+		linkedElement* lastLinkedListEl = currentLinkedListEl;
+		while (currentDir != NULL) {
+			if (strcmp(currentLinkedListEl->content, currentDir->name) != 0) {
+				lastDir = currentDir;
+				node* currentSibling = currentDir->sibling;
+				while (currentSibling != NULL && strcmp(currentSibling->name, currentLinkedListEl->content) != 0) {
+					lastDir = currentSibling;
+					currentSibling = currentSibling->sibling;
+				}
+				if (currentSibling == NULL) { // case where the file doesnt exist
+					fprintf(stderr, "no sibling directory name : %s, last known : %s \n", currentLinkedListEl->content, lastDir->name);
+					destroy(path);
+					return -1;
+				}
+				if (last(path)->depth == currentLinkedListEl->depth && strcmp(currentSibling->name, currentLinkedListEl->content) == 0) {
+					CWD = currentSibling;
+					destroy(path);
+					return 1;
+				}
+				lastDir = currentSibling;
+				currentDir = currentSibling->child;
+				//printf("a sibling : %s has been found in depth : %d  \n", currentLinkedListEl->content, currentLinkedListEl->depth);
+				lastLinkedListEl = currentLinkedListEl;
+				currentLinkedListEl = currentLinkedListEl->next;
+			}
+			else {
+				lastDir = currentDir;
+				currentDir = currentDir->child;
+				lastLinkedListEl = currentLinkedListEl;
+				currentLinkedListEl = currentLinkedListEl->next;
+				//puts("the file is down below in the child");
+				if (currentLinkedListEl == NULL) {
+					if (last(path)->depth == lastLinkedListEl->depth) {
+						CWD = lastDir;
+						destroy(path);
+						return 0;
+					}
+					else {
+						fprintf(stderr, "no directory name : %s \n", lastLinkedListEl->content);
+						destroy(path);
+						return -1;
+					}
+				}
+			}
+		}
+		fprintf(stderr, "no sibling directory name : %s, last known : %s \n", currentLinkedListEl->content, lastDir->name);
+		destroy(path);
+		return -1;
+
+	}
 	return 0;
 }
 
@@ -170,7 +250,14 @@ int ls(const char* pathname){
 }
 
 int pwd(void){
-	return 0;
+	linkedElement* myList = init(CWD->name);
+	for ( node* current = CWD->parent; current != NULL; current = current->parent) {
+		addEl(myList, current->name);
+	}
+
+	for ( int i = last(myList)->depth; 0 <= i; i--) {
+
+	}
 }
 
 int creat(const char* pathname){

@@ -1,4 +1,4 @@
-utils = utils/linkedList.o
+utils = utils/linkedList.o utils/stack.o
 obj = main.o commands.o $(utils)
 tests = commands.o tests.o $(utils)
 simulator.out: $(obj) 

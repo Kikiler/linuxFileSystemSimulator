@@ -6,13 +6,7 @@
 
 void test_mkdir(void) {
     puts("Test mkdir started");
-    ROOT = malloc(sizeof(node));
-    ROOT->child = NULL;
-    ROOT->sibling = NULL;
-    ROOT->fileType = 'D';
-    ROOT->name = "/";
-    ROOT->parent = NULL;
-    CWD = ROOT;
+    initRoot();
     assert(!mkdir("/lol/"));
 
     // siblings working correctly
@@ -46,13 +40,7 @@ void test_mkdir(void) {
 
 void test_rmdir(void) {
     puts("Test rmdir started");
-    ROOT = malloc(sizeof(node));
-    ROOT->child = NULL;
-    ROOT->sibling = NULL;
-    ROOT->fileType = 'D';
-    ROOT->name = "/";
-    ROOT->parent = NULL;
-    CWD = ROOT;
+    initRoot();
 
     //create the files
     mkdir("/Eldest00/");
@@ -94,7 +82,17 @@ void test_rmdir(void) {
     puts("Test rmdir done");
 }
 
+void test_CWD(void) {
+    puts("Test CWD started : functions in test -> PWD and CD");
+    initRoot();
+
+
+
+
+}
+
 int main(void) {
     test_mkdir();
     test_rmdir();
+    puts("All tests passed");
 }

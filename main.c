@@ -38,13 +38,9 @@ void quit(void){
 int main(void) {
 	puts("\t\t\t\t\t Welcome to the linux file system simulator ");
 	puts("\t\t\t\t\t You'll find all the typical commands you'd find in a unix-like terminal which means :");
-	ROOT = malloc(sizeof(node));
-	ROOT->child = NULL;
-	ROOT->sibling = NULL;
-	ROOT->fileType = 'D';
-	ROOT->name = "/";
-	ROOT->parent = NULL;
-	CWD = ROOT;
+
+	initRoot();
+
 	puts("mkdir, rmdir, cd, ls, rm, save and reload all working with a directory name and pwd without ");
 	while(1){
 		char buffer[128];
